@@ -1,0 +1,1008 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="کاتالوگ">
+<meta name="theme-color" content="#f4f1ea">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>کاتالوگ سفارش</title>
+<style>
+:root{
+  --bg:#f4f1ea; --card:#ffffff; --ink:#1c1b19; --muted:#6f6a60;
+  --accent:#a8741a; --accent-ink:#ffffff; --line:#e2dccf; --danger:#c0392b;
+  --soft:#ece6d8; --shadow:0 1px 2px rgba(0,0,0,.08),0 4px 14px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#161514; --card:#23211f; --ink:#f1ede4; --muted:#9a9488;
+    --accent:#d9a441; --accent-ink:#1b1608; --line:#34312d; --danger:#e0705f;
+    --soft:#2d2a26; --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font:16px/1.5 -apple-system,"SF Pro Text","Vazirmatn","Segoe UI",Tahoma,sans-serif;
+  -webkit-text-size-adjust:100%;overscroll-behavior:none}
+button{font:inherit;color:inherit}
+.hide{display:none!important}
+
+/* ---------- shell ---------- */
+#app{display:flex;flex-direction:column;height:100dvh;
+  padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+header.bar{display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-bottom:1px solid var(--line);background:var(--bg);flex:none}
+header.bar h1{font-size:18px;margin:0;flex:1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs{display:flex;gap:6px;background:var(--soft);padding:4px;border-radius:12px}
+.tab{border:0;background:transparent;padding:8px 18px;border-radius:9px;font-weight:600;color:var(--muted)}
+.tab[aria-selected=true]{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+main{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
+.pad{padding:14px}
+
+.btn{border:1px solid var(--line);background:var(--card);padding:9px 14px;border-radius:11px;font-weight:600;
+  display:inline-flex;align-items:center;gap:6px;min-height:42px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.45}
+.btn.icon{padding:9px 12px;min-width:42px;justify-content:center}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.muted{color:var(--muted)}
+.spacer{flex:1}
+
+/* ---------- photo library ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.thumb{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--soft);
+  border:2px solid transparent;cursor:pointer}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.thumb.sel{border-color:var(--accent)}
+.thumb .mark{position:absolute;top:8px;inset-inline-start:8px;width:26px;height:26px;border-radius:50%;
+  background:rgba(0,0,0,.45);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+.thumb.sel .mark{background:var(--accent);color:var(--accent-ink)}
+.empty{text-align:center;color:var(--muted);padding:60px 20px}
+.empty b{display:block;font-size:18px;color:var(--ink);margin-bottom:6px}
+.actionbar{position:sticky;bottom:0;display:flex;gap:8px;align-items:center;padding:10px 14px;
+  background:var(--bg);border-top:1px solid var(--line)}
+.banner{background:var(--soft);padding:10px 14px;border-radius:12px;margin-bottom:12px;font-weight:600}
+
+/* ---------- orders list ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.card{background:var(--card);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;cursor:pointer;border:1px solid var(--line)}
+.card .strip{display:grid;grid-template-columns:repeat(3,1fr);height:96px;gap:2px;background:var(--soft)}
+.card .strip img{width:100%;height:100%;object-fit:cover}
+.card .meta{padding:12px 14px}
+.card .name{font-weight:700;font-size:17px}
+
+/* ---------- order viewer ---------- */
+.viewer{display:flex;flex-direction:column;height:100%}
+.tools{display:flex;gap:6px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);
+  overflow-x:auto;flex:none;-webkit-overflow-scrolling:touch}
+.tool{border:1px solid var(--line);background:var(--card);border-radius:11px;min-width:46px;height:46px;
+  font-size:20px;display:inline-flex;align-items:center;justify-content:center;padding:0 10px;flex:none}
+.tool[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.tool.txt{font-size:14px;font-weight:700}
+.sw{width:34px;height:34px;border-radius:50%;border:3px solid var(--card);box-shadow:0 0 0 1px var(--line);flex:none}
+.sw[aria-pressed=true]{box-shadow:0 0 0 3px var(--ink)}
+.sep{width:1px;align-self:stretch;background:var(--line);margin:0 4px;flex:none}
+.stagewrap{direction:ltr;flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;
+  background:var(--soft);overflow:hidden}
+.stage{position:relative;box-shadow:var(--shadow);background:#fff}
+.stage img{width:100%;height:100%;display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.nav{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:72px;border-radius:14px;border:0;
+  background:rgba(0,0,0,.35);color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center}
+.nav.prev{left:10px}.nav.next{right:10px}
+.counter{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.5);color:#fff;
+  padding:3px 12px;border-radius:99px;font-size:13px;font-weight:700}
+.filmstrip{direction:ltr;display:flex;gap:6px;padding:8px 12px;overflow-x:auto;flex:none;border-top:1px solid var(--line);
+  -webkit-overflow-scrolling:touch}
+.filmstrip img{height:62px;width:62px;object-fit:cover;border-radius:9px;border:3px solid transparent;flex:none;cursor:pointer}
+.filmstrip img.cur{border-color:var(--accent)}
+.filmstrip .has{position:relative;flex:none}
+.filmstrip .has i{position:absolute;top:4px;right:4px;width:10px;height:10px;border-radius:50%;background:#d62828;border:2px solid #fff}
+
+/* ---------- dialogs / busy ---------- */
+dialog{border:0;border-radius:18px;padding:0;background:var(--card);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);
+  width:min(92vw,420px)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog form{padding:18px;display:flex;flex-direction:column;gap:12px}
+dialog h3{margin:0;font-size:18px}
+dialog input,dialog textarea{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);
+  border-radius:11px;padding:11px 12px;width:100%}
+dialog .btns{display:flex;gap:8px;justify-content:flex-start;flex-wrap:wrap}
+#busy{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:50}
+#busy div{background:var(--card);padding:18px 26px;border-radius:16px;font-weight:700;box-shadow:var(--shadow)}
+.footer{padding:14px;color:var(--muted);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="bar" id="topbar"></header>
+  <main id="main"></main>
+</div>
+<input type="file" id="picker" accept="image/*" multiple class="hide">
+<input type="file" id="restorePicker" accept="application/json,.json" class="hide">
+<div id="busy" class="hide"><div id="busyMsg"></div></div>
+
+<script>
+'use strict';
+
+/* =====================================================================
+   Small helpers
+   ===================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const todayStr = () => new Date().toLocaleDateString('en-CA');
+
+function h(tag, props = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (v === false || v == null) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'html') e.innerHTML = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v === true) e.setAttribute(k, '');
+    else e.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null || kid === false) continue;
+    e.append(kid.nodeType ? kid : document.createTextNode(kid));
+  }
+  return e;
+}
+
+/* =====================================================================
+   Storage: IndexedDB. Photos are stored once, untouched. An order only
+   points at photos and carries its own marks, so marking a photo for one
+   customer can never change it for another.
+   ===================================================================== */
+let db;
+function openDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('catalog-v1', 1);
+    r.onupgradeneeded = () => {
+      r.result.createObjectStore('photos', { keyPath: 'id' });
+      r.result.createObjectStore('orders', { keyPath: 'id' });
+    };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+function idb(store, mode, fn) {
+  return new Promise((res, rej) => {
+    const t = db.transaction(store, mode);
+    const out = fn(t.objectStore(store));
+    t.oncomplete = () => res(out && out.result);
+    t.onerror = () => rej(t.error);
+    t.onabort = () => rej(t.error);
+  });
+}
+const dbAll = (s) => idb(s, 'readonly', (st) => st.getAll());
+const dbPut = (s, v) => idb(s, 'readwrite', (st) => st.put(v));
+const dbDel = (s, k) => idb(s, 'readwrite', (st) => st.delete(k));
+
+/* =====================================================================
+   State
+   ===================================================================== */
+const SIZES = {
+  // fractions of the photo's width, so a mark looks the same at any zoom
+  pen: [0.003, 0.006, 0.011],
+  text: [0.026, 0.042, 0.068],
+  stamp: [0.045, 0.075, 0.115],
+};
+const COLORS = ['#d62828', '#1d4ed8', '#111111', '#15803d', '#e08a00'];
+
+const S = {
+  view: 'lib',          // 'lib' | 'orders' | 'order'
+  photos: [],
+  orders: [],
+  selecting: false,
+  sel: new Set(),
+  pickFor: null,        // order id while adding photos to an existing order
+  orderId: null,
+  idx: 0,
+  tool: 'pen',
+  color: COLORS[0],
+  size: 1,
+  fingerDraw: localStorage.getItem('fd') === '1',
+};
+
+const photoById = (id) => S.photos.find((p) => p.id === id);
+const orderById = (id) => S.orders.find((o) => o.id === id);
+
+const urlCache = new Map();
+function urlFor(photo, kind) {
+  const key = photo.id + ':' + kind;
+  if (!urlCache.has(key)) urlCache.set(key, URL.createObjectURL(kind === 'thumb' ? photo.thumb : photo.blob));
+  return urlCache.get(key);
+}
+
+/* =====================================================================
+   Dialogs
+   ===================================================================== */
+function ask({ title, text, initial = '', multiline = false, ok = 'تأیید', cancel = 'انصراف', input = true }) {
+  return new Promise((resolve) => {
+    const field = !input ? null : multiline
+      ? h('textarea', { rows: 3 })
+      : h('input', { type: 'text', autocomplete: 'off' });
+    if (field) field.value = initial;
+
+    const d = h('dialog', {},
+      h('form', { method: 'dialog' },
+        h('h3', {}, title),
+        text ? h('div', { class: 'muted' }, text) : null,
+        field,
+        h('div', { class: 'btns' },
+          h('button', { class: 'btn primary', value: 'ok' }, ok),
+          cancel ? h('button', { class: 'btn', value: 'cancel', formnovalidate: true }, cancel) : null)));
+    d.addEventListener('close', () => {
+      const okPressed = d.returnValue === 'ok';
+      const val = field ? field.value.trim() : true;
+      d.remove();
+      resolve(okPressed ? val : null);
+    });
+    document.body.append(d);
+    d.showModal();
+    if (field) { field.focus(); field.select?.(); }
+  });
+}
+const askText = (title, initial, multiline) => ask({ title, initial, multiline });
+const confirmBox = async (title, text, ok = 'بله') =>
+  (await ask({ title, text, ok, input: false })) === true;
+
+function choose(title, options) {
+  return new Promise((resolve) => {
+    const d = h('dialog', {},
+      h('form', { method: 'dialog' },
+        h('h3', {}, title),
+        ...options.map((o) => h('button', { class: 'btn', value: o.value }, o.label)),
+        h('button', { class: 'btn', value: '' }, 'انصراف')));
+    d.addEventListener('close', () => { const v = d.returnValue; d.remove(); resolve(v || null); });
+    document.body.append(d);
+    d.showModal();
+  });
+}
+
+function busy(msg) {
+  const box = $('#busy');
+  const m = $('#busyMsg');
+  m.textContent = msg;
+  box.classList.remove('hide');
+  return { set: (t) => (m.textContent = t), done: () => box.classList.add('hide') };
+}
+
+/* =====================================================================
+   Images
+   ===================================================================== */
+async function loadImage(blob) {
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    return img;
+  } finally {
+    // the decoded bitmap stays usable after the URL is released
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+}
+function scaleToBlob(img, maxSide, quality) {
+  const w0 = img.naturalWidth, h0 = img.naturalHeight;
+  const k = Math.min(1, maxSide / Math.max(w0, h0));
+  const w = Math.max(1, Math.round(w0 * k)), hh = Math.max(1, Math.round(h0 * k));
+  const c = document.createElement('canvas');
+  c.width = w; c.height = hh;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, w, hh);
+  ctx.drawImage(img, 0, 0, w, hh);
+  return new Promise((res, rej) =>
+    c.toBlob((b) => (b ? res({ blob: b, w, h: hh }) : rej(new Error('toBlob'))), 'image/jpeg', quality));
+}
+
+async function importFiles(files) {
+  files = [...files].filter((f) => f.type.startsWith('image/') || /\.(jpe?g|png|heic|webp)$/i.test(f.name));
+  if (!files.length) return;
+  const b = busy(`در حال افزودن عکس… ۰ از ${files.length}`);
+  let n = 0, failed = 0;
+  for (const f of files) {
+    try {
+      const img = await loadImage(f);
+      const full = await scaleToBlob(img, 2400, 0.9);
+      const th = await scaleToBlob(img, 420, 0.8);
+      const rec = { id: uid(), name: f.name.replace(/\.[^.]+$/, ''), blob: full.blob, w: full.w, h: full.h,
+        thumb: th.blob, added: Date.now() };
+      await dbPut('photos', rec);
+      S.photos.push(rec);
+    } catch (e) { console.error(e); failed++; }
+    n++;
+    b.set(`در حال افزودن عکس… ${n} از ${files.length}`);
+  }
+  b.done();
+  if (failed) await ask({ title: 'بعضی عکس‌ها باز نشدند', text: `${failed} عکس اضافه نشد.`, input: false, cancel: null });
+  render();
+}
+
+/* =====================================================================
+   Marks: drawing and hit-testing. Coordinates are fractions of the photo,
+   so they are resolution-independent (screen, PDF and share all match).
+   ===================================================================== */
+const bbox = new WeakMap();
+
+function isRtlText(s) { return /[؀-ۿݐ-ݿﭐ-﷿]/.test(s); }
+
+function drawMarks(ctx, marks, W, H, draft) {
+  const list = draft ? marks.concat([draft]) : marks;
+  for (const m of list) {
+    if (m.t === 'path') {
+      ctx.strokeStyle = m.c; ctx.fillStyle = m.c;
+      ctx.lineWidth = Math.max(1, m.w * W);
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      if (m.p.length === 1) {
+        ctx.beginPath(); ctx.arc(m.p[0][0] * W, m.p[0][1] * H, ctx.lineWidth / 2, 0, Math.PI * 2); ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(m.p[0][0] * W, m.p[0][1] * H);
+        for (let i = 1; i < m.p.length; i++) ctx.lineTo(m.p[i][0] * W, m.p[i][1] * H);
+        ctx.stroke();
+      }
+    } else if (m.t === 'text' || m.t === 'stamp') {
+      const px = Math.max(8, m.s * W);
+      const str = m.t === 'stamp' ? m.ch : m.txt;
+      ctx.font = `${m.t === 'stamp' ? '700 ' : '600 '}${px}px -apple-system,"Vazirmatn","Segoe UI",Tahoma,sans-serif`;
+      ctx.textBaseline = 'middle';
+      ctx.direction = isRtlText(str) ? 'rtl' : 'ltr';
+      ctx.textAlign = 'center';
+      const lines = String(str).split('\n');
+      const lh = px * 1.25;
+      let maxw = 0;
+      lines.forEach((ln, i) => {
+        const y = m.y * H + (i - (lines.length - 1) / 2) * lh;
+        const x = m.x * W;
+        maxw = Math.max(maxw, ctx.measureText(ln).width);
+        if (m.t === 'text') {
+          ctx.lineWidth = px * 0.2; ctx.strokeStyle = 'rgba(255,255,255,.92)'; ctx.lineJoin = 'round';
+          ctx.strokeText(ln, x, y);
+        }
+        ctx.fillStyle = m.c;
+        ctx.fillText(ln, x, y);
+      });
+      bbox.set(m, { x: m.x * W, y: m.y * H, w: maxw, h: lh * lines.length });
+    }
+  }
+}
+
+function hitMark(m, x, y, W, H, slop) {
+  if (m.t === 'path') {
+    const r = slop + (m.w * W) / 2;
+    for (let i = 0; i < m.p.length; i++) {
+      const ax = m.p[i][0] * W, ay = m.p[i][1] * H;
+      if (Math.hypot(ax - x, ay - y) <= r) return true;
+      if (i) {
+        const bx = m.p[i - 1][0] * W, by = m.p[i - 1][1] * H;
+        const dx = ax - bx, dy = ay - by, L = dx * dx + dy * dy;
+        const t = L ? Math.max(0, Math.min(1, ((x - bx) * dx + (y - by) * dy) / L)) : 0;
+        if (Math.hypot(bx + t * dx - x, by + t * dy - y) <= r) return true;
+      }
+    }
+    return false;
+  }
+  const b = bbox.get(m);
+  if (!b) return false;
+  return Math.abs(x - b.x) <= b.w / 2 + slop && Math.abs(y - b.y) <= b.h / 2 + slop;
+}
+
+/* =====================================================================
+   Export: marked JPEGs, a PDF, a backup
+   ===================================================================== */
+async function renderMarked(photo, marks) {
+  const img = await loadImage(photo.blob);
+  const W = img.naturalWidth, H = img.naturalHeight;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(img, 0, 0, W, H);
+  drawMarks(ctx, marks, W, H);
+  const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.92));
+  return { blob, w: W, h: H };
+}
+
+async function buildPdf(pages) {
+  // Minimal PDF: one page per photo, the JPEG embedded as-is.
+  const enc = new TextEncoder();
+  const parts = [];
+  const offsets = [];
+  let len = 0;
+  const push = (x) => { const b = typeof x === 'string' ? enc.encode(x) : x; parts.push(b); len += b.length; };
+  const obj = (n, body) => { offsets[n] = len; push(`${n} 0 obj\n`); body(); push('\nendobj\n'); };
+
+  push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+  const kids = pages.map((_, i) => `${3 + i * 3} 0 R`).join(' ');
+  obj(1, () => push('<< /Type /Catalog /Pages 2 0 R >>'));
+  obj(2, () => push(`<< /Type /Pages /Kids [${kids}] /Count ${pages.length} >>`));
+  for (let i = 0; i < pages.length; i++) {
+    const p = pages[i];
+    const pw = 595, ph = Math.round((595 * p.h) / p.w * 100) / 100;
+    const bytes = new Uint8Array(await p.blob.arrayBuffer());
+    const pg = 3 + i * 3, ct = pg + 1, im = pg + 2;
+    obj(pg, () => push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im0 ${im} 0 R >> >> /Contents ${ct} 0 R >>`));
+    const content = `q ${pw} 0 0 ${ph} 0 0 cm /Im0 Do Q`;
+    obj(ct, () => push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`));
+    obj(im, () => {
+      push(`<< /Type /XObject /Subtype /Image /Width ${p.w} /Height ${p.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${bytes.length} >>\nstream\n`);
+      push(bytes);
+      push('\nendstream');
+    });
+  }
+  const total = 3 + pages.length * 3;
+  const xref = len;
+  push(`xref\n0 ${total}\n0000000000 65535 f \n`);
+  for (let n = 1; n < total; n++) push(String(offsets[n]).padStart(10, '0') + ' 00000 n \n');
+  push(`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+  return new Blob(parts, { type: 'application/pdf' });
+}
+
+async function shareOrDownload(files, title) {
+  try {
+    if (navigator.canShare && navigator.canShare({ files })) {
+      await navigator.share({ files, title });
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;
+  }
+  for (const f of files) {
+    const a = h('a', { href: URL.createObjectURL(f), download: f.name });
+    document.body.append(a); a.click(); a.remove();
+    await sleep(250);
+  }
+}
+
+const safeName = (s) => s.replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'order';
+
+async function exportOrder(order) {
+  const how = await choose(`خروجی سفارش «${order.customer}»`, [
+    { value: 'pdf', label: 'فایل PDF (یک صفحه برای هر عکس)' },
+    { value: 'img', label: 'عکس‌ها با علامت‌ها (اشتراک یا ذخیره)' },
+  ]);
+  if (!how) return;
+  const b = busy('در حال ساخت خروجی…');
+  try {
+    const rendered = [];
+    for (let i = 0; i < order.items.length; i++) {
+      b.set(`در حال ساخت خروجی… ${i + 1} از ${order.items.length}`);
+      const it = order.items[i];
+      const p = photoById(it.pid);
+      if (p) rendered.push(await renderMarked(p, it.marks));
+    }
+    const base = `${safeName(order.customer)} ${order.created}`;
+    let files;
+    if (how === 'pdf') {
+      const pdf = await buildPdf(rendered);
+      files = [new File([pdf], base + '.pdf', { type: 'application/pdf' })];
+    } else {
+      files = rendered.map((r, i) => new File([r.blob], `${base} ${String(i + 1).padStart(2, '0')}.jpg`, { type: 'image/jpeg' }));
+    }
+    b.done();
+    await shareOrDownload(files, order.customer);
+  } catch (e) {
+    b.done();
+    console.error(e);
+    await ask({ title: 'خروجی ساخته نشد', text: String(e && e.message || e), input: false, cancel: null });
+  }
+}
+
+const blobToDataURL = (b) => new Promise((res, rej) => {
+  const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(b);
+});
+
+async function exportBackup() {
+  const b = busy('در حال ساخت پشتیبان…');
+  try {
+    const parts = ['{"v":1,"photos":['];
+    let first = true, n = 0;
+    for (const p of S.photos) {
+      parts.push((first ? '' : ',') + JSON.stringify({ id: p.id, name: p.name, w: p.w, h: p.h, added: p.added, data: await blobToDataURL(p.blob) }));
+      first = false;
+      b.set(`در حال ساخت پشتیبان… ${++n} از ${S.photos.length}`);
+    }
+    parts.push('],"orders":' + JSON.stringify(S.orders) + '}');
+    const f = new File(parts, `catalog-backup-${todayStr()}.json`, { type: 'application/json' });
+    b.done();
+    await shareOrDownload([f], 'پشتیبان کاتالوگ');
+  } catch (e) {
+    b.done();
+    await ask({ title: 'پشتیبان ساخته نشد', text: String(e && e.message || e), input: false, cancel: null });
+  }
+}
+
+async function restoreBackup(file) {
+  const b = busy('در حال خواندن پشتیبان…');
+  try {
+    const data = JSON.parse(await file.text());
+    let np = 0, no = 0;
+    for (const p of data.photos || []) {
+      if (photoById(p.id)) continue;
+      const blob = await (await fetch(p.data)).blob();
+      const img = await loadImage(blob);
+      const th = await scaleToBlob(img, 420, 0.8);
+      const rec = { id: p.id, name: p.name, w: p.w, h: p.h, added: p.added, blob, thumb: th.blob };
+      await dbPut('photos', rec); S.photos.push(rec); np++;
+    }
+    for (const o of data.orders || []) {
+      if (orderById(o.id)) continue;
+      await dbPut('orders', o); S.orders.push(o); no++;
+    }
+    b.done();
+    await ask({ title: 'بازیابی انجام شد', text: `${np} عکس و ${no} سفارش اضافه شد.`, input: false, cancel: null });
+    render();
+  } catch (e) {
+    b.done();
+    await ask({ title: 'فایل پشتیبان خوانده نشد', text: String(e && e.message || e), input: false, cancel: null });
+  }
+}
+
+/* =====================================================================
+   Saving an order (debounced; also when the app goes to the background)
+   ===================================================================== */
+let saveTimer = null, dirtyOrder = null;
+function touchOrder(order) {
+  dirtyOrder = order;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(flushSave, 350);
+}
+async function flushSave() {
+  clearTimeout(saveTimer);
+  if (!dirtyOrder) return;
+  const o = dirtyOrder; dirtyOrder = null;
+  await dbPut('orders', o);
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushSave(); });
+window.addEventListener('pagehide', flushSave);
+
+/* =====================================================================
+   Rendering
+   ===================================================================== */
+function setTop(title, left, right) {
+  const bar = $('#topbar');
+  bar.replaceChildren(...[left, h('h1', {}, title), right].flat().filter(Boolean));
+}
+
+function tabsEl() {
+  const t = (id, label) =>
+    h('button', { class: 'tab', role: 'tab', 'aria-selected': String(S.view === id),
+      onclick: () => { S.view = id; S.selecting = false; S.sel.clear(); S.pickFor = null; render(); } }, label);
+  return h('div', { class: 'tabs', role: 'tablist' }, t('lib', 'عکس‌ها'), t('orders', 'سفارش‌ها'));
+}
+
+function menuBtn() {
+  return h('button', { class: 'btn icon', 'aria-label': 'بیشتر', onclick: openMenu }, '⋯');
+}
+
+async function openMenu() {
+  const a = await choose('گزینه‌ها', [
+    { value: 'backup', label: 'گرفتن پشتیبان از همه چیز' },
+    { value: 'restore', label: 'بازیابی از فایل پشتیبان' },
+    { value: 'fd', label: S.fingerDraw ? 'انگشت فقط ورق بزند (خاموش کردن نوشتن با انگشت)' : 'با انگشت هم بشود نوشت' },
+  ]);
+  if (a === 'backup') exportBackup();
+  else if (a === 'restore') $('#restorePicker').click();
+  else if (a === 'fd') { S.fingerDraw = !S.fingerDraw; localStorage.setItem('fd', S.fingerDraw ? '1' : '0'); render(); }
+}
+
+function render() {
+  if (S.view === 'order') return renderOrder();
+  if (S.view === 'orders') return renderOrders();
+  return renderLibrary();
+}
+
+/* ---------- library ---------- */
+function renderLibrary() {
+  const main = $('#main');
+  setTop('کاتالوگ', tabsEl(), menuBtn());
+  main.replaceChildren();
+
+  const pickOrder = S.pickFor ? orderById(S.pickFor) : null;
+  const pad = h('div', { class: 'pad' });
+  if (pickOrder) pad.append(h('div', { class: 'banner' }, `عکس‌ها را برای سفارش «${pickOrder.customer}» انتخاب کن`));
+
+  if (!S.photos.length) {
+    pad.append(h('div', { class: 'empty' },
+      h('b', {}, 'هنوز عکسی اضافه نشده'),
+      'عکس محصولات را یک بار اضافه کن. عکس اصلی همیشه بدون نوشته می‌ماند.',
+      h('div', { style: 'margin-top:18px' },
+        h('button', { class: 'btn primary', onclick: () => $('#picker').click() }, '＋ افزودن عکس از گالری'))));
+  } else {
+    const photos = S.photos.slice().sort((a, b) => b.added - a.added);
+    pad.append(h('div', { class: 'row', style: 'margin-bottom:12px' },
+      h('button', { class: 'btn primary', onclick: () => $('#picker').click() }, '＋ افزودن عکس'),
+      pickOrder ? null : h('button', { class: 'btn', onclick: () => { S.selecting = !S.selecting; S.sel.clear(); render(); } },
+        S.selecting ? 'پایان انتخاب' : 'انتخاب'),
+      h('span', { class: 'muted' }, `${photos.length} عکس`)));
+    pad.append(h('div', { class: 'grid' }, photos.map((p) => {
+      const selMode = S.selecting || pickOrder;
+      const on = S.sel.has(p.id);
+      return h('div', { class: 'thumb' + (on ? ' sel' : ''),
+        onclick: () => {
+          if (selMode) { on ? S.sel.delete(p.id) : S.sel.add(p.id); renderLibrary(); }
+          else previewPhoto(p);
+        } },
+        h('img', { src: urlFor(p, 'thumb'), alt: p.name }),
+        selMode ? h('div', { class: 'mark' }, on ? '✓' : '') : null);
+    })));
+    pad.append(h('div', { class: 'footer', id: 'usage' }));
+    refreshUsage();
+  }
+  main.append(pad);
+
+  if ((S.selecting || pickOrder) && S.photos.length) {
+    const n = S.sel.size;
+    const bar = h('div', { class: 'actionbar' },
+      h('span', { class: 'muted' }, n ? `${n} انتخاب شده` : 'چیزی انتخاب نشده'),
+      h('span', { class: 'spacer' }),
+      pickOrder
+        ? [h('button', { class: 'btn', onclick: () => { const id = S.pickFor; S.pickFor = null; S.sel.clear(); openOrder(id); } }, 'انصراف'),
+           h('button', { class: 'btn primary', disabled: !n, onclick: addSelectedToOrder }, 'افزودن به سفارش')]
+        : [h('button', { class: 'btn danger', disabled: !n, onclick: deleteSelectedPhotos }, 'حذف'),
+           h('button', { class: 'btn primary', disabled: !n, onclick: newOrderFromSelection }, 'ساخت سفارش')]);
+    main.append(bar);
+  }
+}
+
+async function refreshUsage() {
+  try {
+    if (!navigator.storage?.estimate) return;
+    const { usage, quota } = await navigator.storage.estimate();
+    const el = $('#usage');
+    if (el) el.textContent = `فضای استفاده‌شده: ${(usage / 1048576).toFixed(0)} مگابایت از ${(quota / 1048576).toFixed(0)}`;
+  } catch (_) {}
+}
+
+async function previewPhoto(p) {
+  const d = h('dialog', { style: 'width:min(96vw,900px);background:#000' },
+    h('form', { method: 'dialog', style: 'padding:0;gap:0' },
+      h('img', { src: urlFor(p, 'full'), style: 'width:100%;max-height:80vh;object-fit:contain;display:block' }),
+      h('div', { class: 'btns', style: 'padding:12px;background:var(--card)' },
+        h('button', { class: 'btn primary', value: 'close' }, 'بستن'))));
+  d.addEventListener('close', () => d.remove());
+  document.body.append(d); d.showModal();
+}
+
+async function newOrderFromSelection() {
+  const ids = S.photos.filter((p) => S.sel.has(p.id)).map((p) => p.id);
+  const name = await ask({ title: 'نام مشتری', text: `${ids.length} عکس برای این مشتری` });
+  if (!name) return;
+  const order = { id: uid(), customer: name, created: todayStr(), items: ids.map((pid) => ({ pid, marks: [] })) };
+  S.orders.push(order);
+  await dbPut('orders', order);
+  S.sel.clear(); S.selecting = false;
+  openOrder(order.id);
+}
+
+async function deleteSelectedPhotos() {
+  const ids = [...S.sel];
+  const used = S.orders.filter((o) => o.items.some((it) => ids.includes(it.pid)));
+  const msg = used.length
+    ? `این عکس‌ها در ${used.length} سفارش هم هستند و از آن سفارش‌ها هم برداشته می‌شوند (همراه علامت‌هایشان).`
+    : 'عکس‌های انتخاب‌شده برای همیشه پاک می‌شوند.';
+  if (!(await confirmBox(`${ids.length} عکس حذف شود؟`, msg, 'حذف'))) return;
+  for (const o of used) {
+    o.items = o.items.filter((it) => !ids.includes(it.pid));
+    await dbPut('orders', o);
+  }
+  for (const id of ids) { await dbDel('photos', id); }
+  S.photos = S.photos.filter((p) => !ids.includes(p.id));
+  S.sel.clear(); S.selecting = false;
+  render();
+}
+
+async function addSelectedToOrder() {
+  const order = orderById(S.pickFor);
+  if (!order) return;
+  const have = new Set(order.items.map((it) => it.pid));
+  const add = S.photos.filter((p) => S.sel.has(p.id) && !have.has(p.id));
+  for (const p of add) order.items.push({ pid: p.id, marks: [] });
+  await dbPut('orders', order);
+  S.pickFor = null; S.sel.clear();
+  openOrder(order.id, order.items.length - add.length);
+}
+
+/* ---------- orders list ---------- */
+function renderOrders() {
+  const main = $('#main');
+  setTop('کاتالوگ', tabsEl(), menuBtn());
+  main.replaceChildren();
+  const pad = h('div', { class: 'pad' });
+  if (!S.orders.length) {
+    pad.append(h('div', { class: 'empty' }, h('b', {}, 'هنوز سفارشی نیست'),
+      'از بخش «عکس‌ها» چند عکس را انتخاب کن و «ساخت سفارش» را بزن.'));
+  } else {
+    const list = S.orders.slice().sort((a, b) => (b.created + b.id).localeCompare(a.created + a.id));
+    pad.append(h('div', { class: 'cards' }, list.map((o) => {
+      const first = o.items.slice(0, 3).map((it) => photoById(it.pid)).filter(Boolean);
+      const marked = o.items.filter((it) => it.marks.length).length;
+      return h('div', { class: 'card', onclick: () => openOrder(o.id) },
+        h('div', { class: 'strip' }, first.map((p) => h('img', { src: urlFor(p, 'thumb'), alt: '' }))),
+        h('div', { class: 'meta' },
+          h('div', { class: 'name' }, o.customer),
+          h('div', { class: 'muted' }, `${o.items.length} عکس · ${marked} علامت‌دار · ${o.created}`)));
+    })));
+  }
+  main.append(pad);
+}
+
+/* ---------- one order: flip, mark ---------- */
+function openOrder(id, idx = 0) {
+  S.view = 'order'; S.orderId = id; S.idx = idx; undoStack = [];
+  render();
+}
+
+let undoStack = [];
+let relayout = null;
+
+function renderOrder() {
+  const order = orderById(S.orderId);
+  if (!order) { S.view = 'orders'; return render(); }
+  const main = $('#main');
+
+  setTop(order.customer,
+    h('button', { class: 'btn icon', 'aria-label': 'بازگشت', onclick: async () => { await flushSave(); S.view = 'orders'; render(); } }, '→'),
+    [h('button', { class: 'btn', onclick: () => { S.pickFor = order.id; S.view = 'lib'; S.sel.clear(); render(); } }, '＋ عکس'),
+     h('button', { class: 'btn primary', onclick: () => exportOrder(order) }, 'خروجی'),
+     h('button', { class: 'btn icon', 'aria-label': 'گزینه‌های سفارش', onclick: () => orderMenu(order) }, '⋯')]);
+
+  main.replaceChildren();
+  if (!order.items.length) {
+    main.append(h('div', { class: 'empty' }, h('b', {}, 'این سفارش عکسی ندارد'), 'با دکمهٔ «＋ عکس» از کتابخانه اضافه کن.'));
+    return;
+  }
+  S.idx = Math.max(0, Math.min(S.idx, order.items.length - 1));
+  const item = () => order.items[S.idx];
+  const photo = () => photoById(item().pid);
+
+  /* tools */
+  const tool = (id, label, aria, cls = '') =>
+    h('button', { class: 'tool ' + cls, 'aria-label': aria, 'aria-pressed': String(S.tool === id),
+      onclick: () => { S.tool = id; renderOrder(); } }, label);
+  const tools = h('div', { class: 'tools' },
+    tool('pen', '✎', 'قلم'), tool('text', 'T', 'متن'),
+    tool('check', '✓', 'تیک'), tool('cross', '✗', 'ضربدر'),
+    tool('eraser', '⌫', 'پاک‌کن'), tool('hand', '✋', 'فقط ورق زدن'),
+    h('div', { class: 'sep' }),
+    COLORS.map((c) => h('button', { class: 'sw', style: `background:${c}`, 'aria-label': 'رنگ', 'aria-pressed': String(S.color === c),
+      onclick: () => { S.color = c; renderOrder(); } })),
+    h('div', { class: 'sep' }),
+    ['S', 'M', 'L'].map((l, i) => h('button', { class: 'tool txt', 'aria-label': 'اندازه', 'aria-pressed': String(S.size === i),
+      onclick: () => { S.size = i; renderOrder(); } }, l)),
+    h('div', { class: 'sep' }),
+    h('button', { class: 'tool', 'aria-label': 'برگرداندن', onclick: undo }, '↶'),
+    h('button', { class: 'tool', 'aria-label': 'پاک کردن همهٔ علامت‌های این عکس', onclick: clearMarks }, '🗑'));
+
+  /* stage */
+  const img = h('img', { alt: '' });
+  const cv = h('canvas');
+  const stage = h('div', { class: 'stage' }, img, cv);
+  const wrap = h('div', { class: 'stagewrap' }, stage,
+    h('div', { class: 'counter' }, `${S.idx + 1} / ${order.items.length}`),
+    order.items.length > 1 ? h('button', { class: 'nav prev', 'aria-label': 'قبلی', onclick: () => go(-1) }, '‹') : null,
+    order.items.length > 1 ? h('button', { class: 'nav next', 'aria-label': 'بعدی', onclick: () => go(1) }, '›') : null);
+
+  /* filmstrip */
+  const strip = h('div', { class: 'filmstrip' }, order.items.map((it, i) => {
+    const p = photoById(it.pid);
+    if (!p) return null;
+    const im = h('img', { src: urlFor(p, 'thumb'), class: i === S.idx ? 'cur' : '', alt: '', onclick: () => { S.idx = i; undoStack = []; renderOrder(); } });
+    return it.marks.length ? h('div', { class: 'has' }, im, h('i')) : im;
+  }));
+
+  main.append(h('div', { class: 'viewer' }, tools, wrap, strip));
+
+  const cur = strip.querySelector('.cur');
+  if (cur) cur.scrollIntoView({ inline: 'center', block: 'nearest' });
+
+  function go(d) {
+    const n = order.items.length;
+    S.idx = (S.idx + d + n) % n; undoStack = [];
+    renderOrder();
+  }
+
+  function marks() { return item().marks; }
+
+  function layout() {
+    const p = photo();
+    if (!p) return;
+    const aw = wrap.clientWidth, ah = wrap.clientHeight;
+    if (!aw || !ah) return;
+    const k = Math.min(aw / p.w, ah / p.h);
+    const dw = Math.floor(p.w * k), dh = Math.floor(p.h * k);
+    stage.style.width = dw + 'px'; stage.style.height = dh + 'px';
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.round(dw * dpr); cv.height = Math.round(dh * dpr);
+    redraw();
+  }
+  let draft = null;
+  function redraw() {
+    const ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    drawMarks(ctx, marks(), cv.width, cv.height, draft);
+  }
+  relayout = layout;
+  img.src = urlFor(photo(), 'full');
+  requestAnimationFrame(layout);
+
+  function snapshot() {
+    undoStack.push(JSON.stringify(marks()));
+    if (undoStack.length > 60) undoStack.shift();
+  }
+  function undo() {
+    if (!undoStack.length) return;
+    item().marks = JSON.parse(undoStack.pop());
+    touchOrder(order); redraw(); refreshStripDot();
+  }
+  async function clearMarks() {
+    if (!marks().length) return;
+    if (!(await confirmBox('همهٔ علامت‌های این عکس پاک شود؟', 'فقط برای همین سفارش پاک می‌شود. عکس اصلی و سفارش‌های دیگر دست نمی‌خورند.', 'پاک شود'))) return;
+    snapshot(); item().marks = [];
+    touchOrder(order); redraw(); refreshStripDot();
+  }
+  function refreshStripDot() { renderOrderStripOnly(); }
+  function renderOrderStripOnly() {
+    strip.replaceChildren(...order.items.map((it, i) => {
+      const p = photoById(it.pid);
+      if (!p) return null;
+      const im = h('img', { src: urlFor(p, 'thumb'), class: i === S.idx ? 'cur' : '', alt: '', onclick: () => { S.idx = i; undoStack = []; renderOrder(); } });
+      return it.marks.length ? h('div', { class: 'has' }, im, h('i')) : im;
+    }).filter(Boolean));
+  }
+
+  /* pointer handling */
+  const norm = (e) => {
+    const r = cv.getBoundingClientRect();
+    return [Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))];
+  };
+  let gesture = null;
+  cv.addEventListener('pointerdown', (e) => {
+    if (e.button > 0) return;
+    cv.setPointerCapture(e.pointerId);
+    const draws = (e.pointerType !== 'touch' || S.fingerDraw) && S.tool !== 'hand';
+    const pt = norm(e);
+    gesture = { id: e.pointerId, sx: e.clientX, sy: e.clientY, moved: false, draws, pt };
+    if (!draws) return;
+    if (S.tool === 'pen') {
+      draft = { t: 'path', c: S.color, w: SIZES.pen[S.size], p: [pt] };
+      redraw();
+    } else if (S.tool === 'eraser') {
+      gesture.erasing = true; gesture.snap = false; eraseAt(pt);
+    }
+  });
+  cv.addEventListener('pointermove', (e) => {
+    if (!gesture || e.pointerId !== gesture.id) return;
+    if (Math.hypot(e.clientX - gesture.sx, e.clientY - gesture.sy) > 8) gesture.moved = true;
+    if (!gesture.draws) return;
+    if (S.tool === 'pen' && draft) {
+      const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+      for (const ev of (evs.length ? evs : [e])) draft.p.push(norm(ev));
+      redraw();
+    } else if (gesture.erasing) {
+      eraseAt(norm(e));
+    }
+  });
+  function eraseAt(pt) {
+    const W = cv.width, H = cv.height;
+    const slop = 14 * (cv.width / cv.getBoundingClientRect().width);
+    const list = marks();
+    for (let i = list.length - 1; i >= 0; i--) {
+      if (hitMark(list[i], pt[0] * W, pt[1] * H, W, H, slop)) {
+        if (!gesture.snap) { snapshot(); gesture.snap = true; }
+        list.splice(i, 1);
+        touchOrder(order); redraw(); refreshStripDot();
+        break;
+      }
+    }
+  }
+  const endGesture = async (e) => {
+    if (!gesture || e.pointerId !== gesture.id) return;
+    const g = gesture; gesture = null;
+    const dx = e.clientX - g.sx, dy = e.clientY - g.sy;
+    if (!g.draws) {
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) go(dx < 0 ? 1 : -1);
+      return;
+    }
+    if (S.tool === 'pen' && draft) {
+      snapshot();
+      // thin the point list a little to keep saved orders small
+      const p = draft.p, out = [p[0]];
+      for (let i = 1; i < p.length - 1; i++) {
+        const q = out[out.length - 1];
+        if (Math.hypot(p[i][0] - q[0], p[i][1] - q[1]) > 0.0015) out.push(p[i]);
+      }
+      if (p.length > 1) out.push(p[p.length - 1]);
+      draft.p = out.map((a) => [Math.round(a[0] * 10000) / 10000, Math.round(a[1] * 10000) / 10000]);
+      marks().push(draft); draft = null;
+      touchOrder(order); redraw(); refreshStripDot();
+    } else if ((S.tool === 'check' || S.tool === 'cross') && !g.moved) {
+      snapshot();
+      const ch = S.tool === 'check' ? '✓' : '✗';
+      marks().push({ t: 'stamp', ch, x: g.pt[0], y: g.pt[1], s: SIZES.stamp[S.size], c: S.tool === 'check' ? '#15803d' : '#d62828' });
+      touchOrder(order); redraw(); refreshStripDot();
+    } else if (S.tool === 'text' && !g.moved) {
+      const txt = await ask({ title: 'متن', multiline: true });
+      if (txt) {
+        snapshot();
+        marks().push({ t: 'text', txt, x: g.pt[0], y: g.pt[1], s: SIZES.text[S.size], c: S.color });
+        touchOrder(order); redraw(); refreshStripDot();
+      }
+    }
+  };
+  cv.addEventListener('pointerup', endGesture);
+  cv.addEventListener('pointercancel', (e) => { if (gesture && e.pointerId === gesture.id) { gesture = null; draft = null; redraw(); } });
+}
+
+window.addEventListener('resize', () => { if (S.view === 'order' && relayout) relayout(); });
+window.addEventListener('orientationchange', () => setTimeout(() => { if (S.view === 'order' && relayout) relayout(); }, 250));
+
+async function orderMenu(order) {
+  const a = await choose(`سفارش «${order.customer}»`, [
+    { value: 'rename', label: 'تغییر نام مشتری' },
+    { value: 'dup', label: 'ساخت سفارش تازه با همین عکس‌ها (بدون علامت)' },
+    { value: 'remove', label: 'برداشتن این عکس از سفارش' },
+    { value: 'delete', label: 'حذف کل سفارش' },
+  ]);
+  if (a === 'rename') {
+    const n = await askText('نام مشتری', order.customer);
+    if (n) { order.customer = n; await dbPut('orders', order); renderOrder(); }
+  } else if (a === 'dup') {
+    const n = await askText('نام مشتری جدید');
+    if (!n) return;
+    const copy = { id: uid(), customer: n, created: todayStr(), items: order.items.map((it) => ({ pid: it.pid, marks: [] })) };
+    S.orders.push(copy); await dbPut('orders', copy); openOrder(copy.id);
+  } else if (a === 'remove') {
+    if (!(await confirmBox('این عکس از سفارش برداشته شود؟', 'عکس در کتابخانه می‌ماند. علامت‌های همین سفارش روی آن پاک می‌شود.', 'برداشته شود'))) return;
+    await flushSave();
+    order.items.splice(S.idx, 1);
+    await dbPut('orders', order); undoStack = []; renderOrder();
+  } else if (a === 'delete') {
+    if (!(await confirmBox(`سفارش «${order.customer}» حذف شود؟`, 'عکس‌ها در کتابخانه می‌مانند.', 'حذف'))) return;
+    dirtyOrder = null;
+    await dbDel('orders', order.id);
+    S.orders = S.orders.filter((o) => o.id !== order.id);
+    S.view = 'orders'; render();
+  }
+}
+
+/* =====================================================================
+   Start
+   ===================================================================== */
+$('#picker').addEventListener('change', async (e) => {
+  const files = [...e.target.files]; e.target.value = '';
+  await importFiles(files);
+});
+$('#restorePicker').addEventListener('change', async (e) => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (f) await restoreBackup(f);
+});
+
+(async function start() {
+  try {
+    db = await openDB();
+    S.photos = await dbAll('photos');
+    S.orders = await dbAll('orders');
+    if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
+  } catch (e) {
+    console.error(e);
+    $('#main').replaceChildren(h('div', { class: 'empty' }, h('b', {}, 'ذخیره‌سازی در این مرورگر در دسترس نیست'),
+      'اگر در حالت Private باز کرده‌ای، در حالت عادی باز کن.'));
+    return;
+  }
+  render();
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
